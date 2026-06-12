@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Are you quoting at a loss? — Trade Profit Calculator</title>
+<meta name="description" content="Free 60-second calculator for tradies. Find your true hourly cost, break-even rate, and whether you're quoting at a loss.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- ===== SOCIAL LINK PREVIEW ===== -->
+<!-- AFTER you deploy, replace the two URLs below with your live Netlify address so the preview image shows when you paste the link. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Are you quoting at a loss?">
+<meta property="og:description" content="Find what an hour really costs you in 60 seconds. Free tool for tradies.">
+<meta property="og:image" content="https://REPLACE-WITH-YOUR-SITE.netlify.app/og-image.png">
+<meta property="og:url" content="https://REPLACE-WITH-YOUR-SITE.netlify.app">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root{
+    --navy:#0f172a; --navy2:#1e293b; --bg:#eef2f6; --card:#ffffff;
+    --ink:#1e293b; --muted:#64748b; --line:#e2e8f0;
+    --amber:#f59e0b; --amber-bg:#fffbeb; --green:#059669; --green-bg:#ecfdf5;
+    --red:#dc2626; --red-bg:#fef2f2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px 56px}
+
+  /* Header */
+  header{background:var(--navy);color:#fff}
+  .head-in{max-width:760px;margin:0 auto;padding:18px 16px;display:flex;align-items:center;gap:12px}
+  .badge{background:var(--amber);color:var(--navy);width:40px;height:40px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .head-in h1{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .head-in p{font-size:12px;color:#94a3b8}
+
+  /* Hero */
+  .hero{background:var(--navy);color:#fff;padding:8px 0 30px}
+  .hero-in{max-width:760px;margin:0 auto;padding:0 16px;text-align:center}
+  .hero h2{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+  .hero h2 .hl{color:var(--amber)}
+  .hero p{color:#cbd5e1;font-size:14px;max-width:480px;margin:0 auto}
+
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);margin-top:16px}
+  .card h3{font-size:15px;font-weight:800;margin-bottom:2px}
+  .card .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:12.5px;color:var(--muted);font-weight:600}
+  .ip{position:relative}
+  .ip input{width:100%;border:1px solid var(--line);background:#f8fafc;border-radius:9px;
+    padding:10px 12px;font-size:15px;text-align:right;color:var(--ink);outline:none;transition:.15s}
+  .ip.has-pre input{padding-left:26px}
+  .ip.has-suf input{padding-right:30px}
+  .ip input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.18);background:#fff}
+  .ip .pre,.ip .suf{position:absolute;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+  .ip .pre{left:11px}.ip .suf{right:12px}
+  .hint{font-size:11px;color:#94a3b8;margin-top:6px}
+
+  /* Result hero */
+  .verdict{border-radius:14px;padding:22px 20px;margin-top:16px;text-align:center;border:1px solid}
+  .verdict.loss{background:var(--red-bg);border-color:#fecaca}
+  .verdict.ok{background:var(--green-bg);border-color:#a7f3d0}
+  .verdict .eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .verdict.loss .eyebrow{color:var(--red)}.verdict.ok .eyebrow{color:var(--green)}
+  .verdict .big{font-size:40px;font-weight:800;letter-spacing:-.02em;margin:4px 0 6px;line-height:1}
+  .verdict.loss .big{color:var(--red)}.verdict.ok .big{color:var(--green)}
+  .verdict .exp{font-size:13.5px;color:var(--ink);max-width:460px;margin:0 auto}
+
+  /* Ladder */
+  .ladder{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .rung{display:flex;align-items:center;gap:12px}
+  .rung .lab{width:108px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0}
+  .track{flex:1;background:#f1f5f9;border-radius:7px;height:30px;position:relative;overflow:hidden}
+  .bar{height:100%;border-radius:7px;display:flex;align-items:center;justify-content:flex-end;
+    padding-right:9px;transition:width .5s ease;min-width:54px}
+  .bar span{font-size:12.5px;font-weight:700;color:#fff}
+  .bar.cost{background:#94a3b8}.bar.even{background:var(--amber)}.bar.charge{background:var(--green)}
+  .nowline{position:relative;height:22px;margin-left:120px}
+  .nowmark{position:absolute;top:0;bottom:0;border-left:2px dashed var(--red)}
+  .nowmark span{position:absolute;top:-2px;left:5px;font-size:11.5px;font-weight:700;color:var(--red);white-space:nowrap}
+
+  .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+  .num{border:1px solid var(--line);border-radius:11px;padding:12px;text-align:center}
+  .num.even{background:var(--amber-bg);border-color:#fde68a}
+  .num.charge{background:var(--green-bg);border-color:#a7f3d0}
+  .num .k{font-size:11px;color:var(--muted)}
+  .num .v{font-size:19px;font-weight:800;margin-top:2px}
+  .num.even .v{color:#b45309}.num.charge .v{color:var(--green)}
+
+  /* Quote mini */
+  details{margin-top:16px}
+  summary{cursor:pointer;font-weight:700;font-size:14px;list-style:none;
+    display:flex;align-items:center;gap:8px;padding:4px 0}
+  summary::-webkit-details-marker{display:none}
+  summary .chev{transition:.2s;color:var(--muted)}
+  details[open] summary .chev{transform:rotate(90deg)}
+  .quote-out{display:flex;justify-content:space-between;align-items:center;
+    background:var(--navy);color:#fff;border-radius:11px;padding:14px 16px;margin-top:12px}
+  .quote-out .ql{font-size:12px;color:#94a3b8}
+  .quote-out .qv{font-size:24px;font-weight:800;color:#34d399}
+
+  /* CTA */
+  .cta{background:var(--navy);border-radius:16px;padding:26px 22px;margin-top:22px;text-align:center;color:#fff}
+  .cta h3{font-size:19px;font-weight:800;margin-bottom:8px}
+  .cta p{color:#cbd5e1;font-size:14px;max-width:440px;margin:0 auto 16px}
+  .cta a{display:inline-block;background:var(--amber);color:var(--navy);font-weight:800;
+    text-decoration:none;padding:13px 26px;border-radius:10px;font-size:15px;transition:.15s}
+  .cta a:hover{background:#fbbf24;transform:translateY(-1px)}
+  .foot{text-align:center;font-size:11px;color:#94a3b8;margin-top:22px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <div class="badge">⛑️</div>
+    <div>
+      <h1 id="brand">Your Trade Business</h1>
+      <p>Trade Profit Calculator</p>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <h2>Are you quoting at <span class="hl">a loss?</span></h2>
+    <p>Most tradies charge by gut feel and never check what an hour actually costs them. Punch in your numbers and find out in 60 seconds.</p>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <!-- INPUTS -->
+  <div class="card">
+    <h3>Your numbers</h3>
+    <div class="sub">Rough is fine — you can adjust as you go.</div>
+    <div class="grid">
+      <div class="field"><label>What you pay yourself / staff (per hour)</label>
+        <div class="ip has-pre"><span class="pre">$</span><input id="wage" type="number" inputmode="decimal" value="40"></div></div>
+      <div class="field"><label>What you charge clients now (per hour)</label>
+        <div class="ip has-pre"><span class="pre">$</span><input id="now" type="number" inputmode="decimal" value="85"></div></div>
+      <div class="field"><label>Hours worked per week</label>
+        <div class="ip"><input id="hpw" type="number" inputmode="decimal" value="38"></div></div>
+      <div class="field"><label>Weeks off per year (leave + holidays + sick)</label>
+        <div class="ip"><input id="off" type="number" inputmode="decimal" value="6"></div></div>
+      <div class="field"><label>Non-billable time — travel, quoting, admin</label>
+        <div class="ip has-suf"><input id="nb" type="number" inputmode="decimal" value="25"><span class="suf">%</span></div></div>
+      <div class="field"><label>On-costs — super, workers comp, allowances</label>
+        <div class="ip has-suf"><input id="oc" type="number" inputmode="decimal" value="17"><span class="suf">%</span></div></div>
+      <div class="field"><label>Monthly business overheads</label>
+        <div class="ip has-pre"><span class="pre">$</span><input id="oh" type="number" inputmode="decimal" value="2600"></div></div>
+      <div class="field"><label>On the tools — billable, incl. you (apprentice, labourer)</label>
+        <div class="ip"><input id="crew" type="number" inputmode="decimal" value="1"></div></div>
+      <div class="field"><label>Office / admin wages — non-billable (per month)</label>
+        <div class="ip has-pre"><span class="pre">$</span><input id="admin" type="number" inputmode="decimal" value="0"></div></div>
+      <div class="field"><label>Target profit margin</label>
+        <div class="ip has-suf"><input id="mar" type="number" inputmode="decimal" value="25"><span class="suf">%</span></div></div>
+    </div>
+    <p class="hint">Overheads = vehicle, insurance, tools, software, licences, phone, accounting, marketing. An apprentice or labouring hand counts as on the tools; an office/admin person goes in admin wages.</p>
+  </div>
+
+  <!-- VERDICT -->
+  <div id="verdict" class="verdict loss">
+    <div class="eyebrow" id="vEyebrow">Estimated profit leak</div>
+    <div class="big mono" id="vBig">$0</div>
+    <div class="exp" id="vExp"></div>
+  </div>
+
+  <!-- RATES -->
+  <div class="card">
+    <h3>What an hour really costs you</h3>
+    <div class="sub">The climb from wage to a rate that actually makes money.</div>
+    <div class="ladder">
+      <div class="rung"><div class="lab">True labour cost</div><div class="track"><div class="bar cost" id="barCost"><span class="mono" id="costTxt">$0</span></div></div></div>
+      <div class="rung"><div class="lab">Break-even</div><div class="track"><div class="bar even" id="barEven"><span class="mono" id="evenTxt">$0</span></div></div></div>
+      <div class="rung"><div class="lab">Charge-out</div><div class="track"><div class="bar charge" id="barCharge"><span class="mono" id="chargeTxt">$0</span></div></div></div>
+      <div class="nowline"><div class="nowmark" id="nowMark"><span class="mono" id="nowTxt"></span></div></div>
+    </div>
+    <div class="nums">
+      <div class="num"><div class="k">True labour cost</div><div class="v mono" id="nCost">$0</div></div>
+      <div class="num even"><div class="k">Break-even / hr</div><div class="v mono" id="nEven">$0</div></div>
+      <div class="num charge"><div class="k">Charge-out / hr</div><div class="v mono" id="nCharge">$0</div></div>
+    </div>
+
+    <details>
+      <summary><span class="chev">▶</span> Price a job at the right rate</summary>
+      <div class="grid" style="margin-top:12px">
+        <div class="field"><label>Materials (total, inc. waste)</label>
+          <div class="ip has-pre"><span class="pre">$</span><input id="qMat" type="number" inputmode="decimal" value="1760"></div></div>
+        <div class="field"><label>Labour hours on the job</label>
+          <div class="ip"><input id="qHrs" type="number" inputmode="decimal" value="32"></div></div>
+        <div class="field"><label>Other costs — hire, tip, fuel</label>
+          <div class="ip has-pre"><span class="pre">$</span><input id="qOth" type="number" inputmode="decimal" value="720"></div></div>
+      </div>
+      <div class="quote-out">
+        <div><div class="ql">True cost <span id="qCost" class="mono"></span> → quote (inc GST)</div></div>
+        <div class="qv mono" id="qPrice">$0</div>
+      </div>
+    </details>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <h3 id="ctaHead">Want this fixed properly?</h3>
+    <p id="ctaText">I'll audit your real costs and rebuild your quoting so every job makes money — in one short session. Book a free 20-minute Profit Review.</p>
+    <a id="ctaBtn" href="#BOOK">Book my free Profit Review →</a>
+  </div>
+
+  <p class="foot">
+    Estimates only — based on the numbers you enter. Confirm your actual WorkCover QLD rate, licences and on-costs.<br>
+    Super shown as part of on-costs (12% guarantee, 2025–26). GST 10%. Built for SEQ trade businesses.
+  </p>
+</div>
+
+<script>
+/* ============================================================
+   EDIT THESE 4 LINES — your branding and booking link
+   ============================================================ */
+var CONFIG = {
+  businessName: "Your Trade Business",                 // shows top-left
+  ctaHeadline:  "Want this fixed properly?",
+  ctaText:      "I'll audit your real costs and rebuild your quoting so every job makes money — in one short session. Book a free 20-minute Profit Review.",
+  bookingUrl:   "https://your-skool-or-calendly-link"  // paste your Skool / Calendly / form link
+};
+/* ============================================================ */
+
+document.getElementById("brand").textContent = CONFIG.businessName;
+document.getElementById("ctaHead").textContent = CONFIG.ctaHeadline;
+document.getElementById("ctaText").textContent = CONFIG.ctaText;
+document.getElementById("ctaBtn").href = CONFIG.bookingUrl;
+
+var $ = function(id){ return document.getElementById(id); };
+var num = function(id){ var n = parseFloat($(id).value); return isNaN(n) ? 0 : n; };
+var aud = function(n,d){ if(d===undefined)d=2; if(!isFinite(n))n=0;
+  return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:d,maximumFractionDigits:d}).format(n); };
+
+function calc(){
+  var wage=num("wage"), now=num("now"), hpw=num("hpw"), off=num("off"),
+      nb=num("nb")/100, oc=num("oc")/100, ohMonth=num("oh"), mar=num("mar")/100,
+      crew=Math.max(num("crew"),1), admin=num("admin");
+
+  var paidHours = hpw*52;
+  var billableHours = (paidHours - off*hpw) * (1-nb);
+  if(billableHours<=0) billableHours = 1;
+  var grossWage = wage*hpw*52;
+  var trueLabour = (grossWage*(1+oc))/billableHours;
+  var annualOverheads = (ohMonth + admin)*12;
+  var overheadHr = annualOverheads/(billableHours*crew);
+  var breakEven = trueLabour + overheadHr;
+  var chargeOut = mar<1 ? breakEven/(1-mar) : breakEven;
+
+  // bars scaled to charge-out (or current rate if higher)
+  var max = Math.max(chargeOut, now, 1);
+  function w(v){ return Math.max((v/max)*100, 9) + "%"; }
+  $("barCost").style.width = w(trueLabour);
+  $("barEven").style.width = w(breakEven);
+  $("barCharge").style.width = w(chargeOut);
+  $("costTxt").textContent = aud(trueLabour);
+  $("evenTxt").textContent = aud(breakEven);
+  $("chargeTxt").textContent = aud(chargeOut);
+  $("nCost").textContent = aud(trueLabour);
+  $("nEven").textContent = aud(breakEven);
+  $("nCharge").textContent = aud(chargeOut);
+
+  if(now>0){
+    $("nowMark").style.display="block";
+    $("nowMark").style.left = (now/max)*100 + "%";
+    $("nowTxt").textContent = aud(now)+" now";
+  } else { $("nowMark").style.display="none"; }
+
+  // verdict
+  var v=$("verdict");
+  if(now>0 && now<breakEven){
+    var leak=(breakEven-now)*billableHours;
+    var crewNote = crew>1 ? " Across a crew of "+crew+", the real number is higher." : "";
+    v.className="verdict loss";
+    $("vEyebrow").textContent="You're quoting below cost";
+    $("vBig").textContent="− "+aud(leak,0)+" / yr";
+    $("vExp").innerHTML="At <b>"+aud(now)+"/hr</b> against a break-even of <b>"+aud(breakEven)+"/hr</b>, you lose about <b>"+aud(breakEven-now)+" every billable hour</b> — roughly "+aud(leak,0)+" a year, before any profit."+crewNote;
+  } else if(now>0 && now<chargeOut){
+    var gap=(chargeOut-now)*billableHours;
+    v.className="verdict loss";
+    $("vEyebrow").textContent="Covering cost, but under-charging";
+    $("vBig").textContent=aud(now);
+    $("vExp").innerHTML="You're above break-even, but short of your "+ (mar*100).toFixed(0) +"% margin. Lifting to <b>"+aud(chargeOut)+"/hr</b> adds about <b>"+aud(gap,0)+" a year</b> in profit.";
+  } else if(now>0){
+    v.className="verdict ok";
+    $("vEyebrow").textContent="You're pricing for profit";
+    $("vBig").textContent=aud(now);
+    $("vExp").innerHTML="Your rate clears your "+ (mar*100).toFixed(0) +"% margin. Recommended charge-out is <b>"+aud(chargeOut)+"/hr</b> — hold the line.";
+  } else {
+    v.className="verdict ok";
+    $("vEyebrow").textContent="Your recommended rate";
+    $("vBig").textContent=aud(chargeOut);
+    $("vExp").innerHTML="That's break-even of <b>"+aud(breakEven)+"</b> plus your "+ (mar*100).toFixed(0) +"% margin. Enter what you charge now to see the gap.";
+  }
+
+  // job quote
+  var jobCost = num("qMat") + num("qHrs")*breakEven + num("qOth");
+  var price = mar<1 ? jobCost/(1-mar) : jobCost;
+  $("qCost").textContent = aud(jobCost,0);
+  $("qPrice").textContent = aud(price*1.1,0);
+}
+
+document.querySelectorAll("input").forEach(function(el){ el.addEventListener("input", calc); });
+calc();
+</script>
+</body>
+</html>
